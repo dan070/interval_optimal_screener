@@ -14,11 +14,11 @@ function(input, output, clientData, session) {
     infile <- input$infile
     if( is.null(uploadeddata()) )
     {
-      updateSelectInput(session, "varnames", choices = "empty")    
-      updateSelectInput(session, "targetnames", choices = "empty")    
+      updateSelectInput(session, "varnames", choices = "Choose...")    
+      updateSelectInput(session, "targetnames", choices = "Choose...")    
       
     } 
-    else if( !is.null(uploadeddata()) && (input$varnames == "empty")  )
+    else if( !is.null(uploadeddata()) && (input$varnames == "Choose...")  )
     { 
       # update list of variable names
       temp <- lapply(X = uploadeddata(), FUN = class)
@@ -31,10 +31,6 @@ function(input, output, clientData, session) {
       
       
     }
-    ## calculate endpoints for the slider
-    if(input$varnames != "empty")
-    {
-    }
   })#observe
   
   ##---------------------------------------
@@ -43,9 +39,7 @@ function(input, output, clientData, session) {
   observe({
     updateSelectInput(session, "preinterval1", choices = input$varnames)
     updateSelectInput(session, "preinterval2", choices = input$targetname)
-    output$uniquevalues <- renderText( length(unique(uploadeddata()[, input$varnames])))
-    
-    
+    ##output$uniquevalues <- renderText( length(unique(uploadeddata()[, input$varnames])))
   })#observe
   
   
@@ -157,6 +151,22 @@ function(input, output, clientData, session) {
   ## + Update page 4 sliders!
   ##---------------------------------------
   
+  
+  intervaldata_loop <- reactiveValues(counter = NULL)
+
+  
+#   output$text31 <- renderText({
+#     invalidateLater(millis = 100, session = session)
+#     intervaldata_loop$counter
+#   })#renderText
+  
+  
+  #kick the calculation to start it.
+  output$text3 <- renderText({ 
+    if (input$calculate == 0 ) return()
+    isolate( paste0(class(intervaldata()))) 
+  })#rendertext 
+  
   intervaldata <-  reactive({
     input$calculate
     cat("intervaldata : 1\n")
@@ -166,26 +176,32 @@ function(input, output, clientData, session) {
                        lowerlimit = NA, upperlimit = NA)
     i <- j <- tmpcnt <- 1
     cat("intervaldata : 3\n")
-    for(i in 1:(nrow(data.2)-1))
-    {
-      run_N <- data.2[i, "n"]
-      run_s <- data.2[i, "s"]  
-      for(j in (i+1):nrow(data.2))
+    ## Show a progress bar for the calculation.
+    withProgress(message = "Calculating... ", value = 0, expr = {      
+      for(i in 1:(nrow(data.2)-1))
       {
-        run_N <- run_N + data.2[j, "n"]
-        run_s <- run_s + data.2[j, "s"]
-        # write each 
-        df.1[tmpcnt, "s"] <- run_s
-        df.1[tmpcnt, "n"] <- run_N
-        df.1[tmpcnt, "m"] <- run_s / run_N
-        df.1[tmpcnt, "lowerlimit"] <- data.2[i, "xmin"]
-        df.1[tmpcnt, "upperlimit"] <- data.2[j, "xmax"]
-        tmpcnt <- tmpcnt + 1
-        # debug
-        cat(tmpcnt, " ")
-        output$text31 <- renderText({paste0(tmpcnt)})
-      }#for i
-    }#for j
+        run_N <- data.2[i, "n"]
+        run_s <- data.2[i, "s"]  
+        for(j in (i+1):nrow(data.2))
+        {
+          run_N <- run_N + data.2[j, "n"]
+          run_s <- run_s + data.2[j, "s"]
+          # write each 
+          df.1[tmpcnt, "s"] <- run_s
+          df.1[tmpcnt, "n"] <- run_N
+          df.1[tmpcnt, "m"] <- run_s / run_N
+          df.1[tmpcnt, "lowerlimit"] <- data.2[i, "xmin"]
+          df.1[tmpcnt, "upperlimit"] <- data.2[j, "xmax"]
+          tmpcnt <- tmpcnt + 1
+          #cat(tmpcnt, " ")
+          ## Update the progress bar.
+          incProgress(amount = 1/(nrow(data.2)*(nrow(data.2)-1)*0.5)
+                      , detail = paste("interval", tmpcnt, " of ", (nrow(data.2)*(nrow(data.2)-1)*0.5))
+                      )
+        }#for i
+      }#for j
+    })#withprogress
+    
     cat("intervaldata : 3\n")
     
     ## Update sliders on page 4
@@ -247,10 +263,10 @@ function(input, output, clientData, session) {
   ## end of temporary plots etc.
   output$plot.1.histogram <- renderPlot({
     cat("output$plot.1.histogram", "\n")
-    cat("input$varnames", ":", input$varnames, "\n")
-    cat("input$targetnames", ":", input$targetname, "\n")
+    cat("input$varnames :", input$varnames, "\n")
+    cat("input$targetnames :", input$targetname, "\n")
     
-    if(input$varnames == "empty" || input$targetname == "empty") 
+    if(input$varnames == "Choose..." || input$targetname == "Choose...") 
       return(NULL)
     
     ## plot the histogram for the interval variable
@@ -262,7 +278,7 @@ function(input, output, clientData, session) {
   
   output$plot.1.distributions <- renderPlot({
     cat("output$plot.1.distributions", "\n")
-    if(input$varnames == "empty" || input$targetname == "empty") 
+    if(input$varnames == "Choose..." || input$targetname == "Choose...") 
       return(NULL)
     plot(ecdf(uploadeddata()[ uploadeddata()[, input$targetname]==1 , input$varnames])
          , verticals = T, pch = NA, col = "blue"
@@ -306,8 +322,10 @@ function(input, output, clientData, session) {
     return(temp)
   })#renderplot
   
+
+  ## Inform user of how many calculations to do.
   output$nr_of_buckets_to_calculate <- renderText({
-    paste0(input$setbuckets * (input$setbuckets - 1) / 2  ,  " intervalls to calculate.")
+    paste0(input$setbuckets * (input$setbuckets - 1) / 2  ,  " intervals possible.")
   })#renderText
   
   
@@ -316,12 +334,7 @@ function(input, output, clientData, session) {
   ##------------------------------
   ## Plots window 4
   ##------------------------------   
-  
-  #kick the calculation to start it.
-  output$text3 <- renderText({ 
-    if (input$calculate == 0 ) return()
-    isolate( paste0(class(intervaldata()))) 
-  })#rendertext
+
   
   
   # Main plot of this program!!
@@ -375,10 +388,10 @@ function(input, output, clientData, session) {
   })
   
   ## Debug printout for clicks!
-  output$plot.4.text <- renderPrint({
-    cat("output$plot.4.text", "\n")
-    str(input$plot.4.brush)
-  })
+#   output$plot.4.text <- renderPrint({
+#     cat("output$plot.4.text", "\n")
+#     str(input$plot.4.brush)
+#   })
   
   
   ## Table clicked point
@@ -417,24 +430,38 @@ function(input, output, clientData, session) {
   zoom <- reactiveValues(xlim = NULL, ylim = NULL)
   
   observeEvent(input$plot.4.dblclick, {
+    cat("observeEvent input$plot.4.dblclick : 1", "\n")
     brush <- input$plot.4.brush
     if (!is.null(brush)) {
+      cat("observeEvent input$plot.4.dblclick : 2", "\n")
       zoom$xlim <- c(brush$xmin, brush$xmax)
       zoom$ylim <- c(brush$ymin, brush$ymax)
-      updateSliderInput(session = session, inputId = "xlimit"
-                        , min = round(min(zoom$xlim), 
-                                      , max = floor(max(zoom$xlim))
-                                      , value = c(round(min(zoom$xlim))
-                                                  , floor(max(zoom$xlim))
-                                      )
+      cat("observeEvent input$plot.4.dblclick : 3", "\n")      
+      updateSliderInput(session = session
+                        , inputId = "xlimit"
+                        , min = min(intervaldata()$lowerlimit)
+                        , max = max(intervaldata()$lowerlimit)
+                        , value = c(round(min(zoom$xlim))
+                                    , floor(max(zoom$xlim))
+                                    )
                         )
-                        
-                        
+                
+      cat("observeEvent input$plot.4.dblclick : 4", "\n")
+      updateSliderInput(session = session
+                        , inputId = "ylimit"
+                        , min = min(intervaldata()$upperlimit)
+                        , max = max(intervaldata()$upperlimit)
+                        , value = c(round(min(zoom$ylim))
+                                    , floor(max(zoom$ylim))
+                        )
+      )
     } else {
       zoom$xlim <- NULL
       zoom$ylim <- NULL
+      cat("observeEvent input$plot.4.dblclick : 5", "\n")
+      
     }
-    
+    cat("observeEvent input$plot.4.dblclick : 6", "\n")    
     
   })
   

@@ -17,9 +17,9 @@ fluidPage(
                             ,
                             h2("Choose variables")
                             ,
-                            selectInput("varnames", "Interval", "empty" )    
+                            selectInput("varnames", "Interval", "Choose..." )    
                             ,
-                            selectInput("targetname", "Target (with 2 classes only)", "empty")    
+                            selectInput("targetname", "Target (with 2 classes only)", "Choose...")    
                             
                             
                           )#sidebarpanel
@@ -48,20 +48,20 @@ fluidPage(
                        ,
                        sidebarLayout(
                          sidebarPanel(
-                           h2("Bucket selection")
+                           h2("Bucket numbers")
                            ,
-                           p("Cuts interval in sized pieces, few = shorter calc time")
+                           p("Cuts variable in sized pieces... fewer buckets = shorter calc time")
                            ,
-                           sliderInput("setbuckets", label = "Choose number of buckets for calculation"
+                           sliderInput("setbuckets", label = "Number of buckets"
                                        , min = 0, max = 1, value = 0.5, step = 1)
                            ,
                            textOutput("nr_of_buckets_to_calculate")
                            ,
                            h3("Chosen variables")
                            ,
-                           selectInput("preinterval1", label = "Variable:", choices = "empty")
+                           selectInput("preinterval1", label = "Variable:", choices = "Choose...")
                            ,
-                           selectInput("preinterval2", label = "Target:", choices = "empty")
+                           selectInput("preinterval2", label = "Target:", choices = "Choose...")
                            
                          )#sidebarpanel
                          ,
@@ -113,9 +113,9 @@ fluidPage(
                          mainPanel(
                            h3("Intervals with targetrate color")
                            ,
-                           p("Each point is 1 interval, x=lower limit, y=upper limit")
-                           ,
-                           textOutput("text4")
+                           p("Each point is 1 interval, x=lower limit, y=upper limit. Zooom by dragging + dbl-click. One click = show data for point.")
+                           #,
+                           #textOutput("text4")
                            ,
                            plotOutput("plot.4.top", height = 300, click = "plot.4.click", brush = brushOpts(id = "plot.4.brush", resetOnNew = T), dblclick = "plot.4.dblclick")
                            ,
