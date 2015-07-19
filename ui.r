@@ -20,7 +20,8 @@ fluidPage(
                             selectInput("varnames", "Interval", "Choose..." )    
                             ,
                             selectInput("targetname", "Target (with 2 classes only)", "Choose...")    
-                            
+                            ,
+                            textOutput(outputId = "text.1")
                             
                           )#sidebarpanel
                           ,
@@ -31,7 +32,7 @@ fluidPage(
                             #         ,
                             tableOutput(outputId = "plot.1.table")
                             ,
-                            h3("Target rate over variable")
+                            h3("Variable density")
                             ,
                             plotOutput("plot.1.histogram", height = 300)
                             ,
@@ -52,8 +53,9 @@ fluidPage(
                            ,
                            p("Cuts variable in sized pieces... fewer buckets = shorter calc time")
                            ,
-                           sliderInput("setbuckets", label = "Number of buckets"
-                                       , min = 0, max = 1, value = 0.5, step = 1)
+                           uiOutput(outputId = "ui_slider")
+#                            sliderInput("setbuckets", label = "Number of buckets"
+#                                        , min = 0, max = 1, value = 0.5, step = 1)
                            ,
                            textOutput("nr_of_buckets_to_calculate")
                            ,
@@ -97,17 +99,28 @@ fluidPage(
                          sidebarPanel(
                            h2("Filter settings")
                            ,
-                           sliderInput(inputId = "n_slider", label = "Number of observations", min = 0, max = 10, value = c(0, 5), step = 1, ticks = F)
+                           uiOutput(outputId = "ui_n_slider")
                            ,
-                           sliderInput(inputId = "m_slider", label = "Targetrate (%)", min = 0, max = 10, value = c(0, 5), step = 0.001)
+                           uiOutput(outputId = "ui_m_slider")
                            ,
+                           
+#                            ,
+#                            sliderInput(inputId = "n_slider", label = "Number of observations", min = 0, max = 10, value = c(0, 5), step = 1, ticks = F)
+#                            ,
+#                            sliderInput(inputId = "m_slider", label = "Targetrate (%)", min = 0, max = 10, value = c(0, 5), step = 0.001)
+#                            ,
                            sliderInput(inputId = "pointsize_slider", label = "Point size", min = 1, max = 10, value = c(1), step = 1)
                            ,
                            h2("Zoom")
                            ,
-                           sliderInput(inputId = "xlimit", label = "X-axis limits", min = 1, max = 10, value = c(1, 10), step = 1)
+                           uiOutput(outputId = "ui_xlimit")
                            ,
-                           sliderInput(inputId = "ylimit", label = "Y-axis limits", min = 1, max = 10, value = c(1, 10), step = 1)
+                           uiOutput(outputId = "ui_ylimit")
+
+#                            ,
+#                            sliderInput(inputId = "xlimit", label = "X-axis limits", min = 1, max = 10, value = c(1, 10), step = 1)
+#                            ,
+#                            sliderInput(inputId = "ylimit", label = "Y-axis limits", min = 1, max = 10, value = c(1, 10), step = 1)
                          )#siderbarpanel 
                          ,
                          mainPanel(
